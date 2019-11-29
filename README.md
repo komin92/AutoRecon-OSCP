@@ -1,3 +1,16 @@
+
+AutoRecon.py: 
+added line to create a gnmap folder for gnmap results.
+customized config files for OSCP
+
+cherrycon.py:
+this tool will parse an autorecon output folder and create a cherrytree file based on the results.
+The ANSI color parsing function is limited, and basically only formats simple foreground colors but makes reviewing results easier.
+
+Usage: cherrycon.py [-c|--color] <autorecon directory>
+       i.e.  cherrycon.py -c ./
+
+
 [![Packaging status](https://repology.org/badge/vertical-allrepos/autorecon.svg)](https://repology.org/project/autorecon/versions)
 
 # AutoRecon
