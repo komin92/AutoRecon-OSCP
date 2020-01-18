@@ -27,7 +27,7 @@ HighlighterArray = [
 	# banners
 	[r'(^\|(\s|\_)banner?:)',"#ffff00","nmap"],
 	[r'(^\|\s*VULNERABLE?:)',"#ff4300","nmap"],
-	
+
 	# gobuster
 	[r'(^http.*\(Status: 200\).*\n)',"#00cd00","gobust"],
 	[r'(^http.*\(Status: 403\).*\n)',"#ff0000","gobust"],
@@ -47,7 +47,7 @@ Windows
         ☐ C:\\> mimikatz.exe log "sekurlsa::minidump lsass.dmp" sekurlsa::logonPasswords exit
 
         ☐ C:\\> wce.exe -w, pwdump.exe, fgdump.exe
-       
+
         ☐ net use z: \\\\netbiosname\\SYSVOL  ;  dir /s Groups.xml  ;  type Groups.xml  (then use gpp-decrypt on kali)
 
 
@@ -55,7 +55,7 @@ Linux
     Look for secrets
         ☐ find / -type f -name "*secret*"
 
-    Dump Creds    
+    Dump Creds
         ☐ get copies of /etc/passwd /etc/shadow for cracking
 
 """
@@ -92,7 +92,7 @@ def InsertImage(element,image):
 	# </node>
 
 #service is an libnmap.host.service object
-def DoSearchSploit(service): 
+def DoSearchSploit(service):
 	HEADER = '\033[95m'
 	GREEN = '\033[92m'
 	ENDC = '\033[0m'
@@ -105,7 +105,7 @@ def DoSearchSploit(service):
 	if banner.strip() == '':
 		return
 	banner = banner[9:] # strip product: from begin
-	
+
 
 	match = re.findall(r'([a-z\d_-]+):',banner) # find all words that end in :
 	if match:
@@ -115,8 +115,10 @@ def DoSearchSploit(service):
 
 	for i,val in enumerate(match): # get version: str if exsists
 		if val == "version":
-			version = banner[re.search('version:',banner).end(0):re.search(match[i+1],banner).start(0)]
-	
+			try:
+				version = banner[re.search('version:',banner).end(0):re.search(match[i+1],banner).start(0)]
+			except:
+				version = ''
 
 	# replaces words in version string with words from search  filter (better results)
 	filtertest= product.split(' ')
@@ -127,9 +129,9 @@ def DoSearchSploit(service):
 		if srch in product:
 			product = product.replace(srch,repl).rstrip().lstrip()
 
-	
+
 	if len(product.strip()) < 3 or len(product.strip()) > 50:
-		return	
+		return
 
 	ss = subprocess.check_output(['searchsploit',product]).decode()
 	# match version and add ansi tags
@@ -155,7 +157,7 @@ def DoSearchSploit(service):
 						break
 
 					version_match = ss.find(newver)
-					
+
 					if version_match != -1:
 						verarray.append(newver)
 						ss = ss.replace(newver,BOLD + GREEN + newver + ENDC)
@@ -167,24 +169,24 @@ def DoSearchSploit(service):
 					run = False
 					break
 
-	
+
 
 	output = "-------------------------------------------------------------------------------------------------------------------------------\n"
 	output += "Service: %s\n" %portproto
 	output += "Banner: %s" %banner
 	output += "\n\nSearch Words: %s (RED)" %product
 	output += "\nVersions Highlighted: %s (GREEN)" %verarray
-	output += "\n"	
-	if len(ss) == 42: 
+	output += "\n"
+	if len(ss) == 42:
 		output += "---------------------------------------------------------------------------------------------------------------------------\n"
 	output += ss
 
 	with open(outfile,'w+') as OUT:
 		OUT.seek(0)
-		OUT.write(output) 
+		OUT.write(output)
 
 
-# imports an ansi color file. only does simple ansi formatting.  ***** requires ansifilter 
+# imports an ansi color file. only does simple ansi formatting.  ***** requires ansifilter
 def ImportAnsiFile(element,filename):
 	print("Importing ANSI File: %s" %filename)
 	RTF_VALS = {
@@ -210,7 +212,7 @@ def ImportAnsiFile(element,filename):
 		cur_rtf['bg'] = 0
 		cur_rtf['bold'] = False
 		cur_rtf['italic'] = False
-	
+
 
 		format_str = LookupCodes(ansicode)
 		if format_str == None:
@@ -242,7 +244,7 @@ def ImportAnsiFile(element,filename):
 		if rtf_vals['italic'] == True:
 			rtline.set("style","italic")
 
-	
+
 	with open(filename) as file:
 		txt=file.read()
 		cur_pos = 0
@@ -256,23 +258,23 @@ def ImportAnsiFile(element,filename):
 		for i in re.finditer(ESCAPE_PATTERN,txt): # replace escapes richtext wont use
 			if not i.group().endswith('m'):
 				txt = txt.replace(i.group(),'')
-		
+
 
 		for match in re.finditer(ESCAPE_PATTERN,txt):
 			cur_buf = txt[cur_pos:match.start()]
-			
+
 			if cur_buf != '':
 				PrintRTF(element,cur_buf,cur_rtf_val)
 			rtf_vals = Ansi2RTF(match.group())
-			
+
 			cur_pos = match.end()
-	
-	
+
+		PrintRTF(element,txt[cur_pos:],RTF_VALS)
 
 
 # this function handles colorizing files
 def ParseFile(element,filename):
-	
+
 	if ScansDir not in filename:
 		filename = "%s%s" %(ScansDir,filename)
 
@@ -286,7 +288,7 @@ def ParseFile(element,filename):
 	if file_extension == ".png":
 		InsertImage(element,filename)
 		return
-		
+
 	if args.color == True:
 		# test if its a file we need to color
 		for grp in HighlighterArray:
@@ -300,7 +302,7 @@ def ParseFile(element,filename):
 		with open(filename) as file:
 			data = file.readlines()
 			tmptext = ''
-			
+
 			for line in data:
 				curexp =''
 				color=''
@@ -325,14 +327,14 @@ def ParseFile(element,filename):
 					rtline = ET.SubElement(element, "rich_text")
 					rtline.text=splt[1]
 					rtline.set("foreground",color)
-					
+
 					# add the rest of the line
 					if splt[-1]:
 						tmptext += splt[-1]
 
 				else:
 					tmptext += line
-						# clear tmptext 
+						# clear tmptext
 				ET.SubElement(element, "rich_text").text=tmptext
 				tmptext = ''
 
@@ -388,71 +390,82 @@ AllServiceVersions=[]
 
 #*** parse and combine ports
 if OS.path.exists("%s_full_tcp_nmap.xml" %XMLdir):
-	rep = NmapParser.parse_fromfile("%s_full_tcp_nmap.xml" %XMLdir)
-	for _host in rep.hosts:
-		if _host.is_up():
-			try:
-				if _host.hostnames[0] != '':
-					targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
-				else:
-					targetname = _host.address
-			except:
-				targetname = _host.address
+	try:
+		rep = NmapParser.parse_fromfile("%s_full_tcp_nmap.xml" %XMLdir)
 
-			for  _service in _host.services:
-				if _service.open():
-					AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
-					AllServiceVersions.append(_service.banner)
-					DoSearchSploit(_service)
-					
+
+		for _host in rep.hosts:
+			if _host.is_up():
+				try:
+					if _host.hostnames[0] != '':
+						targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
+					else:
+						targetname = _host.address
+				except:
+					targetname = _host.address
+
+				for  _service in _host.services:
+					if _service.open():
+						AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
+						AllServiceVersions.append(_service.banner)
+						DoSearchSploit(_service)
+	except:
+		print("Failed to parse %s_full_tcp_nmap.xml" %XMLdir)
+
 
 if OS.path.exists("%s_quick_tcp_nmap.xml" %XMLdir):
-	rep = NmapParser.parse_fromfile("%s_quick_tcp_nmap.xml" %XMLdir)
-	for _host in rep.hosts:
-		if _host.is_up():
-			try:
-				if _host.hostnames[0] != '':
-					targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
-				else:
+	try:
+		rep = NmapParser.parse_fromfile("%s_quick_tcp_nmap.xml" %XMLdir)
+		for _host in rep.hosts:
+			if _host.is_up():
+				try:
+					if _host.hostnames[0] != '':
+						targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
+					else:
+						targetname = _host.address
+				except:
 					targetname = _host.address
-			except:
-				targetname = _host.address
 
-			for  _service in _host.services:
-				if _service.open():
-					AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
-					AllServiceVersions.append(_service.banner)
+				for  _service in _host.services:
+					if _service.open():
+						AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
+						AllServiceVersions.append(_service.banner)
+	except:
+		print("Failed to parse %s_quick_tcp_nmap.xml" %XMLdir)
 
 if OS.path.exists("%s_top_20_udp_nmap.xml" %XMLdir):
-	rep = NmapParser.parse_fromfile("%s_top_20_udp_nmap.xml" %XMLdir)
-	for _host in rep.hosts:
-		if _host.is_up():
-			try:
-				if _host.hostnames[0] != '':
-					targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
-				else:
+	try:
+		rep = NmapParser.parse_fromfile("%s_top_20_udp_nmap.xml" %XMLdir)
+		for _host in rep.hosts:
+			if _host.is_up():
+				try:
+					if _host.hostnames[0] != '':
+						targetname = "%s (%s)" %(_host.hostnames[0],_host.address)
+					else:
+						targetname = _host.address
+				except:
 					targetname = _host.address
-			except:
-				targetname = _host.address
 
-			for  _service in _host.services:
-				if _service.open():
-					AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
-					AllServiceVersions.append(_service.banner)
-					DoSearchSploit(_service)
+				for  _service in _host.services:
+					if _service.open():
+						AllPorts.append("%s/%s/%s" %(_service.port,_service.protocol,_service.service))
+						AllServiceVersions.append(_service.banner)
+						DoSearchSploit(_service)
+	except:
+		print("Failed to parse %s_top_20_udp_nmap.xml" %XMLdir)
 
 # remove duplicates
 unique_list = []
-for x in AllPorts: 
-	# check if exists in unique_list or not 
-	if x not in unique_list and x != "": 
-		unique_list.append(x) 
+for x in AllPorts:
+	# check if exists in unique_list or not
+	if x not in unique_list and x != "":
+		unique_list.append(x)
 
 AllPorts = unique_list
 
 
 unique_list2 = []
-for x in AllServiceVersions: 
+for x in AllServiceVersions:
 	# check if exists in unique_list or not
 	x = x.replace("product: ","")
 	if "ostype:" in x:
@@ -460,13 +473,14 @@ for x in AllServiceVersions:
 	if "extrainfo: " in x:
 		x =  x.split("extrainfo: ")[0]
 
-	if x not in unique_list2 and x != "": 
-		unique_list2.append(x) 
+	if x not in unique_list2 and x != "":
+		unique_list2.append(x)
 
 AllServiceVersions = unique_list2
 
 root = ET.Element("cherrytree")
 host = ET.SubElement(root, "node", custom_icon_id="14", foreground="", is_bold="False", name=targetname, prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
+sysinfo = ET.SubElement(host, "node", custom_icon_id="12", foreground="", is_bold="False", name="System Details", prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 
 r_enum = ET.SubElement(host, "node", custom_icon_id="22", foreground="", is_bold="False", name="Remote Enumeration", prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 portnode = ET.SubElement(r_enum, "node", custom_icon_id="38", foreground="", is_bold="False", name="Ports", prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
@@ -475,14 +489,14 @@ portnode = ET.SubElement(r_enum, "node", custom_icon_id="38", foreground="", is_
 for port in AllPorts:
 	service = ET.SubElement(portnode, "node", is_bold="False", name=str(port), prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 	tPort=port.split('/')
-	
-	
+
+
 
 	tmpFileArray = glob.glob("%s%s_%s_*" %(ScansDir,tPort[1],tPort[0]))
 
 	if tmpFileArray:
 		# portscansnode = ET.SubElement(service, "node", custom_icon_id="44", foreground="", is_bold="False", name="Scans", prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
-		
+
 #  parse files for each service
 		for filename in tmpFileArray:
 			basename, file_extension = OS.path.splitext(filename)
@@ -490,14 +504,14 @@ for port in AllPorts:
 			# 	continue
 
 			nodenamearr = filename.split('_')
-			
+
 			if len(nodenamearr) == 4:
 				nodename = "_"
 				nodename = nodename.join(nodenamearr[2:])
 			else:
 				nodename = "_"
 				nodename = nodename.join(nodenamearr[-3:])
-			
+
 
 			portscanfile = ET.SubElement(service, "node", custom_icon_id="18", foreground="", is_bold="False", name=nodename, prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 			ParseFile(portscanfile,filename)
@@ -514,12 +528,12 @@ for filename in OS.listdir(ScansDir):
 
 		scanfile = ET.SubElement(scansnode, "node", custom_icon_id="18", foreground="", is_bold="False", name=filename, prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 		ParseFile(scanfile,filename)
-		
+
 		continue
 	else:
 		continue
 
-            
+
 #######################
 r_service_ver = ET.SubElement(r_enum, "node", custom_icon_id="12", foreground="", is_bold="False", name="Software Versions", prog_lang="custom-colors", readonly="False", tags="", unique_id=str(randint(0,10000)))
 tmptext = ""

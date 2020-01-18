@@ -11,14 +11,14 @@
     [default.nmap-full-tcp]
 
         [default.nmap-full-tcp.service-detection]
-        command = 'nmap {nmap_extra} --open -A --osscan-guess --version-all -p- -oG "{scandir}/gnmap/_quick_tcp_nmap.gnmap" -oN "{scandir}/_full_tcp_nmap.txt" -oX "{scandir}/xml/_full_tcp_nmap.xml" {address}; searchsploit --nmap "{scandir}/xml/_full_tcp_nmap.xml" > "{scandir}/searchsploit-nmap-tcp.ansi"'
+        command = 'nmap {nmap_extra} --open -A --osscan-guess --version-all -p- -oG "{scandir}/gnmap/_full_tcp_nmap.gnmap" -oN "{scandir}/_full_tcp_nmap.txt" -oX "{scandir}/xml/_full_tcp_nmap.xml" {address}; searchsploit --nmap "{scandir}/xml/_full_tcp_nmap.xml" > "{scandir}/searchsploit-nmap-tcp.ansi"'
 
         pattern = '^(?P<port>\d+)\/(?P<protocol>(tcp|udp))(.*)open(\s*)(?P<service>[\w\-\/]+)(\s*)(.*)$'
 
     [default.nmap-top-20-udp]
 
         [default.nmap-top-20-udp.service-detection]
-        command = 'nmap {nmap_extra} --open -sU -A --top-ports=20 --version-all -oG "{scandir}/gnmap/_quick_tcp_nmap.gnmap" -oN "{scandir}/_top_20_udp_nmap.txt" -oX "{scandir}/xml/_top_20_udp_nmap.xml" {address};  searchsploit --nmap "{scandir}/xml/_top_20_udp_nmap.xml" > "{scandir}/searchsploit-nmap-udp.ansi"'
+        command = 'nmap {nmap_extra} --open -sU -A --top-ports=20 --version-all -oG "{scandir}/gnmap/_top_20_udp_nmap.gnmap" -oN "{scandir}/_top_20_udp_nmap.txt" -oX "{scandir}/xml/_top_20_udp_nmap.xml" {address};  searchsploit --nmap "{scandir}/xml/_top_20_udp_nmap.xml" > "{scandir}/searchsploit-nmap-udp.ansi"'
 
         pattern = '^(?P<port>\d+)\/(?P<protocol>(tcp|udp))(.*)open(\s*)(?P<service>[\w\-\/]+)(\s*)(.*)$'
 
@@ -48,3 +48,15 @@
         [udp.udp-top-20.service-detection]
         command = 'nmap {nmap_extra} --open -sU -A -p {ports} --version-all -oG "{scandir}/gnmap/_quick_tcp_nmap.gnmap" -oN "{scandir}/_top_20_udp_nmap.txt" -oX "{scandir}/xml/_top_20_udp_nmap.xml" {address}'
         pattern = '^(?P<port>\d+)\/(?P<protocol>(udp))(.*)open(\s*)(?P<service>[\w\-\/]+)(\s*)(.*)$'
+
+
+[tunneled]
+
+    [tunneled.nmap-quick]
+
+        [tunneled.nmap-quick.service-detection]
+        command = 'nmap {nmap_extra} --open -sT -sV -sC --version-all -oG "{scandir}/gnmap/_quick_tcp_nmap.gnmap" -oN "{scandir}/_quick_tcp_nmap.txt" -oX "{scandir}/xml/_quick_tcp_nmap.xml" {address}'
+        pattern = '^(?P<port>\d+)\/(?P<protocol>(tcp|udp))(.*)open(\s*)(?P<service>[\w\-\/]+)(\s*)(.*)$'
+
+
+    
